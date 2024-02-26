@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/object-recognition-web-app/static/css/main.e6c13ad2.css",
+    "main.js": "/object-recognition-web-app/static/js/main.7ec59f27.js",
+    "static/js/453.46e618c5.chunk.js": "/object-recognition-web-app/static/js/453.46e618c5.chunk.js",
+    "index.html": "/object-recognition-web-app/index.html",
+    "main.e6c13ad2.css.map": "/object-recognition-web-app/static/css/main.e6c13ad2.css.map",
+    "main.7ec59f27.js.map": "/object-recognition-web-app/static/js/main.7ec59f27.js.map",
+    "453.46e618c5.chunk.js.map": "/object-recognition-web-app/static/js/453.46e618c5.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.7ec59f27.js"
+  ]
+}
