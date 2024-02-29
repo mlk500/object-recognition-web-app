@@ -4,31 +4,35 @@ import * as tf from '@tensorflow/tfjs';
 const App = () => {
   const [model, setModel] = useState(null);
   const [modelLoadingError, setModelLoadingError] = useState('');
-  const [selectedObjectIndex, setSelectedObjectIndex] = useState(null); // Added state for selected object index
+  const [selectedObjectIndex, setSelectedObjectIndex] = useState(null); // State for selected object index
   const videoRef = useRef(null); // Reference to the video element for webcam
 
   useEffect(() => {
-    // Load the TensorFlow.js model
     const loadModel = async () => {
       try {
-        const model = await tf.loadLayersModel(process.env.PUBLIC_URL + '/tfjs_model/model.json');
-        setModel(model);
+        const loadedModel = await tf.loadLayersModel(process.env.PUBLIC_URL + '/tfjs_model/model.json');
+        setModel(loadedModel);
       } catch (error) {
         console.error('Model loading failed:', error);
         setModelLoadingError('Failed to load the model');
       }
     };
 
-    // Access the webcam
     const setupWebcam = async () => {
       if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-          .then(stream => {
-            if (videoRef.current) videoRef.current.srcObject = stream;
-          })
-          .catch(error => {
-            console.error('Error accessing the webcam:', error);
-          });
+        const constraints = {
+          video: {
+            facingMode: "environment" // Prefer the back camera
+          }
+        };
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error('Error accessing the webcam:', error);
+        }
       }
     };
 
@@ -36,10 +40,8 @@ const App = () => {
     setupWebcam();
   }, []);
 
-  // Function to capture image from webcam and make a prediction
   const captureAndPredict = async () => {
     if (videoRef.current && model && selectedObjectIndex !== null) {
-      // Capture image from the webcam
       const video = videoRef.current;
       const tensor = tf.browser.fromPixels(video)
         .resizeBilinear([224, 224]) // Resize to match model's expected input
@@ -47,11 +49,10 @@ const App = () => {
         .expandDims(0)
         .div(tf.scalar(255.0)); // Normalize pixel values
 
-      // Predict
       const prediction = await model.predict(tensor).data();
-      const predictedIndex = prediction.indexOf(Math.max(...prediction));
+      const predictedIndex = (await prediction).indexOf(Math.max(...prediction));
 
-      if(predictedIndex === selectedObjectIndex) {
+      if (predictedIndex === selectedObjectIndex) {
         alert("That's it!");
       } else {
         alert("Try again!");
@@ -60,24 +61,6 @@ const App = () => {
       tensor.dispose(); // Remember to dispose the tensor to free memory
     }
   };
-  const setupWebcam = async () => {
-  if (navigator.mediaDevices.getUserMedia) {
-    const constraints = {
-      video: {
-        facingMode: "environment"  // This will attempt to use the back camera on mobile devices
-      }
-    };
-
-    navigator.mediaDevices.getUserMedia(constraints)
-      .then(stream => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      })
-      .catch(error => {
-        console.error('Error accessing the webcam:', error);
-      });
-  }
-};
-
 
   if (modelLoadingError) {
     return <div>Error loading the model: {modelLoadingError}</div>;
