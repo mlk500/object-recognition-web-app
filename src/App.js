@@ -4,6 +4,7 @@ import * as tf from '@tensorflow/tfjs';
 const App = () => {
   const [model, setModel] = useState(null);
   const [modelLoadingError, setModelLoadingError] = useState('');
+  const [selectedObjectIndex, setSelectedObjectIndex] = useState(null); // Added state for selected object index
   const videoRef = useRef(null); // Reference to the video element for webcam
 
   useEffect(() => {
@@ -35,30 +36,45 @@ const App = () => {
     setupWebcam();
   }, []);
 
-// Function to capture image from webcam and make a prediction
-const captureAndPredict = async () => {
-  if (videoRef.current && model) {
-    // Capture image from the webcam
-    const video = videoRef.current;
-    const tensor = tf.browser.fromPixels(video)
-      .resizeBilinear([224, 224]) // Resize to match model's expected input
-      .toFloat()
-      .expandDims(0)
-      .div(tf.scalar(255.0)); // Normalize pixel values
+  // Function to capture image from webcam and make a prediction
+  const captureAndPredict = async () => {
+    if (videoRef.current && model && selectedObjectIndex !== null) {
+      // Capture image from the webcam
+      const video = videoRef.current;
+      const tensor = tf.browser.fromPixels(video)
+        .resizeBilinear([224, 224]) // Resize to match model's expected input
+        .toFloat()
+        .expandDims(0)
+        .div(tf.scalar(255.0)); // Normalize pixel values
 
-    // Predict
-    const prediction = await model.predict(tensor).data();
-    const predictedIndex = prediction.indexOf(Math.max(...prediction));
+      // Predict
+      const prediction = await model.predict(tensor).data();
+      const predictedIndex = prediction.indexOf(Math.max(...prediction));
 
-    // Assuming you have a state or a way to know which object was selected
-    // Let's say selectedObjectIndex is the index of the selected object
-    if(predictedIndex === selectedObjectIndex) {
-      alert("That's it!");
-    } else {
-      alert("Try again!");
+      if(predictedIndex === selectedObjectIndex) {
+        alert("That's it!");
+      } else {
+        alert("Try again!");
+      }
+
+      tensor.dispose(); // Remember to dispose the tensor to free memory
     }
+  };
+  const setupWebcam = async () => {
+  if (navigator.mediaDevices.getUserMedia) {
+    const constraints = {
+      video: {
+        facingMode: "environment"  // This will attempt to use the back camera on mobile devices
+      }
+    };
 
-    tensor.dispose(); // Remember to dispose the tensor to free memory
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      })
+      .catch(error => {
+        console.error('Error accessing the webcam:', error);
+      });
   }
 };
 
@@ -74,6 +90,12 @@ const captureAndPredict = async () => {
   return (
     <div>
       <h1>Model Loaded Successfully</h1>
+      <select onChange={(e) => setSelectedObjectIndex(parseInt(e.target.value, 10))}>
+        <option value="">Select an Object</option>
+        <option value="0">Object 1</option>
+        <option value="1">Object 2</option>
+        <option value="2">Object 3</option>
+      </select>
       <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }}></video>
       <button onClick={captureAndPredict}>Capture and Predict</button>
     </div>
