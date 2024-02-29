@@ -3,6 +3,7 @@ import * as tf from '@tensorflow/tfjs';
 
 const App = () => {
   const [model, setModel] = useState(null);
+  const [facingMode, setFacingMode] = useState("environment"); // Start with the back camera
   const [modelLoadingError, setModelLoadingError] = useState('');
   const [selectedObjectIndex, setSelectedObjectIndex] = useState(null); // State for selected object index
   const videoRef = useRef(null); // Reference to the video element for webcam
@@ -18,27 +19,26 @@ const App = () => {
       }
     };
 
-    const setupWebcam = async () => {
-      if (navigator.mediaDevices.getUserMedia) {
-        const constraints = {
-          video: {
-            facingMode: "environment" // Prefer the back camera
-          }
-        };
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia(constraints);
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (error) {
-          console.error('Error accessing the webcam:', error);
+    const setupWebcam = async (facingMode) => {
+      const constraints = {
+        video: {
+          facingMode
         }
+      };
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing the webcam:', error);
+        alert('The requested camera is not available.');
       }
-    };
+    };    
 
     loadModel();
-    setupWebcam();
-  }, []);
+    setupWebcam(facingMode);
+  }, [facingMode]);
 
   const captureAndPredict = async () => {
     if (videoRef.current && model && selectedObjectIndex !== null) {
@@ -80,7 +80,11 @@ const App = () => {
         <option value="2">Object 3</option>
       </select>
       <video ref={videoRef} autoPlay playsInline style={{ width: '100%' }}></video>
-      <button onClick={captureAndPredict}>Capture and Predict</button>
+      <button onClick={() => {
+        const newFacingMode = facingMode === "environment" ? "user" : "environment";
+        setFacingMode(newFacingMode);
+      }}>Switch Camera</button>
+      <button onClick={captureAndPredict}>Capture and Predict</button> {/* Button to trigger prediction */}
     </div>
   );
 };
