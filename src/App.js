@@ -44,10 +44,10 @@ const App = () => {
     if (videoRef.current && model && selectedObjectIndex !== null) {
       const video = videoRef.current;
       const tensor = tf.browser.fromPixels(video)
-        .resizeBilinear([224, 224]) // Resize to match model's expected input
+        .resizeBilinear([224, 224]) // resize image
         .toFloat()
         .expandDims(0)
-        .div(tf.scalar(255.0)); // Normalize pixel values
+        .div(tf.scalar(255.0));
 
       const prediction = await model.predict(tensor).data();
       const predictedIndex = (await prediction).indexOf(Math.max(...prediction));
@@ -58,7 +58,7 @@ const App = () => {
         alert("Try again!");
       }
 
-      tensor.dispose(); // Remember to dispose the tensor to free memory
+      tensor.dispose();
     }
   };
 
@@ -84,7 +84,7 @@ const App = () => {
         const newFacingMode = facingMode === "environment" ? "user" : "environment";
         setFacingMode(newFacingMode);
       }}>Switch Camera</button>
-      <button onClick={captureAndPredict}>Capture and Predict</button> {/* Button to trigger prediction */}
+      <button onClick={captureAndPredict}>Capture and Predict</button> {}
     </div>
   );
 };
